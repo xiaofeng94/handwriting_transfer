@@ -81,9 +81,9 @@ class UNet(object):
             e5 = encode_layer(e4, self.generator_dim * 8, 5)
             e6 = encode_layer(e5, self.generator_dim * 8, 6)
             e7 = encode_layer(e6, self.generator_dim * 8, 7)
-            e8 = encode_layer(e7, self.generator_dim * 8, 8)
+            # e8 = encode_layer(e7, self.generator_dim * 8, 8)
 
-            return e8, encode_layers
+            return e7, encode_layers
 
     def decoder(self, encoded, encoding_layers, ids, inst_norm, is_training, reuse=False):
         with tf.variable_scope("generator"):
@@ -113,17 +113,25 @@ class UNet(object):
                     dec = tf.concat([dec, enc_layer], 3)
                 return dec
 
-            d1 = decode_layer(encoded, s128, self.generator_dim * 8, layer=1, enc_layer=encoding_layers["e7"],
-                              dropout=True)
-            d2 = decode_layer(d1, s64, self.generator_dim * 8, layer=2, enc_layer=encoding_layers["e6"], dropout=True)
-            d3 = decode_layer(d2, s32, self.generator_dim * 8, layer=3, enc_layer=encoding_layers["e5"], dropout=True)
-            d4 = decode_layer(d3, s16, self.generator_dim * 8, layer=4, enc_layer=encoding_layers["e4"])
-            d5 = decode_layer(d4, s8, self.generator_dim * 4, layer=5, enc_layer=encoding_layers["e3"])
-            d6 = decode_layer(d5, s4, self.generator_dim * 2, layer=6, enc_layer=encoding_layers["e2"])
-            d7 = decode_layer(d6, s2, self.generator_dim, layer=7, enc_layer=encoding_layers["e1"])
-            d8 = decode_layer(d7, s, self.output_filters, layer=8, enc_layer=None, do_concat=False)
+            # d1 = decode_layer(encoded, s128, self.generator_dim * 8, layer=1, enc_layer=encoding_layers["e7"],
+            #                   dropout=True)
+            # d2 = decode_layer(d1, s64, self.generator_dim * 8, layer=2, enc_layer=encoding_layers["e6"], dropout=True)
+            # d3 = decode_layer(d2, s32, self.generator_dim * 8, layer=3, enc_layer=encoding_layers["e5"], dropout=True)
+            # d4 = decode_layer(d3, s16, self.generator_dim * 8, layer=4, enc_layer=encoding_layers["e4"])
+            # d5 = decode_layer(d4, s8, self.generator_dim * 4, layer=5, enc_layer=encoding_layers["e3"])
+            # d6 = decode_layer(d5, s4, self.generator_dim * 2, layer=6, enc_layer=encoding_layers["e2"])
+            # d7 = decode_layer(d6, s2, self.generator_dim, layer=7, enc_layer=encoding_layers["e1"])
+            # d8 = decode_layer(d7, s, self.output_filters, layer=8, enc_layer=None, do_concat=False)
 
-            output = tf.nn.tanh(d8)  # scale to (-1, 1)
+            d1 = decode_layer(encoded, s64, self.generator_dim * 8, layer=1, enc_layer=encoding_layers["e6"], dropout=True)
+            d2 = decode_layer(d1, s32, self.generator_dim * 8, layer=2, enc_layer=encoding_layers["e5"], dropout=True)
+            d3 = decode_layer(d2, s16, self.generator_dim * 8, layer=3, enc_layer=encoding_layers["e4"])
+            d4 = decode_layer(d3, s8, self.generator_dim * 4, layer=4, enc_layer=encoding_layers["e3"])
+            d5 = decode_layer(d4, s4, self.generator_dim * 2, layer=5, enc_layer=encoding_layers["e2"])
+            d6 = decode_layer(d5, s2, self.generator_dim, layer=6, enc_layer=encoding_layers["e1"])
+            d7 = decode_layer(d6, s, self.output_filters, layer=7, enc_layer=None, do_concat=False)
+
+            output = tf.nn.tanh(d7)  # scale to (-1, 1)
             return output
 
     def generator(self, images, embeddings, embedding_ids, inst_norm, is_training, reuse=False):
@@ -539,6 +547,9 @@ class UNet(object):
             for bid, batch in enumerate(train_batch_iter):
                 counter += 1
                 labels, batch_images = batch
+                # add by zsy
+                labels = [0]*len(labels)
+                # print(labels)
                 shuffled_ids = labels[:]
                 if flip_labels:
                     np.random.shuffle(shuffled_ids)

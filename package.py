@@ -18,6 +18,7 @@ def pickle_examples(paths, train_path, val_path, train_val_split=0.1):
         with open(val_path, 'wb') as fv:
             for p in paths:
                 label = int(os.path.basename(p).split("_")[0])
+                # label = int(os.path.basename(p).split("_")[0][1:])-1
                 with open(p, 'rb') as f:
                     print("img %s" % p, label)
                     img_bytes = f.read()
